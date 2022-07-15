@@ -22,8 +22,10 @@ class Constructor {
     }
     
     func construct(mode: ConstructMode) throws {
+        // resolve projects
         let projectsResolver = ProjectsResolver()
         projectsResolver.resolveProjects(config: config)
+        
         let buildSequence = projectsResolver.buildSequence()
         if mode == .serial {
             for projects in buildSequence {

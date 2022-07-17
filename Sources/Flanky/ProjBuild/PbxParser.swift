@@ -8,14 +8,14 @@
 import Foundation
 
 enum ProjParserError: Error {
-    case emptyFile
-    case invalidFile
+    case emptyFile(String)
+    case invalidFile(String)
 }
 
 // TODO: 可能使用XCodeProj做解析会更好
 class PbxParser {
     
-    var projPath: String = ""
+    var pbxFilePath: String = ""
     var pbxObjects: [String : Any] = [:]
     var pbxRootObject: [String : Any] = [:]
     var allFiles: [String: String] = [:] // [uuid : filePath]
@@ -27,23 +27,23 @@ class PbxParser {
     // sourcesphase -> uuid -> filepaths
     func parseProject(_ project: Project) throws {
 //        let path = "/Users/shenglinfan/Desktop/workspace/TestXCRemoteCache_Consumer/TestXCRemoteCache.xcodeproj/project.pbxproj"
-        projPath = project.url.path //"/Users/shenglinfan/Desktop/workspace/TestXCRemoteCache_Consumer"
+        pbxFilePath = project.url.appendingPathComponent("project.pbxproj").path //"/Users/shenglinfan/Desktop/workspace/TestXCRemoteCache_Consumer"
         projectName = project.name // project.name
-        guard FileManager.default.fileExists(atPath: projPath) else {
-            throw ProjParserError.emptyFile
+        guard FileManager.default.fileExists(atPath: pbxFilePath) else {
+            throw ProjParserError.emptyFile(pbxFilePath)
         }
-        guard let pbxProject = NSDictionary.init(contentsOfFile: projPath) as? [String : Any] else {
-            throw ProjParserError.invalidFile
+        guard let pbxProject = NSDictionary.init(contentsOfFile: pbxFilePath) as? [String : Any] else {
+            throw ProjParserError.invalidFile(pbxFilePath)
         }
         guard let objects = pbxProject["objects"] as? [String : Any] else {
-            throw ProjParserError.invalidFile
+            throw ProjParserError.invalidFile(pbxFilePath)
         }
         pbxObjects = objects
         guard let rootObject_uuid = pbxProject["rootObject"] as? String else {
-            throw ProjParserError.invalidFile
+            throw ProjParserError.invalidFile(pbxFilePath)
         }
         guard let rootObject = objects[rootObject_uuid] as? [String : Any] else {
-            throw ProjParserError.invalidFile
+            throw ProjParserError.invalidFile(pbxFilePath)
         }
         pbxRootObject = rootObject
         try parseGroup()
@@ -52,45 +52,45 @@ class PbxParser {
     
     func parseGroup() throws {
         guard let mainGroup_uuid = pbxRootObject["mainGroup"] as? String else {
-            throw ProjParserError.invalidFile
+            throw ProjParserError.invalidFile(pbxFilePath)
         }
         guard let mainGroup = pbxObjects[mainGroup_uuid] as? [String : Any] else {
-            throw ProjParserError.invalidFile
+            throw ProjParserError.invalidFile(pbxFilePath)
         }
-        parseGroup(pbxGroup: mainGroup, filePath: projPath, uuid: mainGroup_uuid)
+        parseGroup(pbxGroup: mainGroup, filePath: pbxFilePath, uuid: mainGroup_uuid)
     }
     
     func parsePhaseSources() throws {
         guard let targets = pbxRootObject["targets"] as? [String] else {
-            throw ProjParserError.invalidFile
+            throw ProjParserError.invalidFile(pbxFilePath)
         }
         var target: [String : Any] = [:]
         for target_uuid in targets {
             guard let aTarget = pbxObjects[target_uuid] as? [String : Any] else {
-                throw ProjParserError.invalidFile
+                throw ProjParserError.invalidFile(pbxFilePath)
             }
-            guard let productName = aTarget["productName"] as? String else {
-                throw ProjParserError.invalidFile
+            guard let name = aTarget["name"] as? String else {
+                throw ProjParserError.invalidFile(pbxFilePath)
             }
-            if productName == projectName {
+            if name == projectName {
                 target = aTarget
                 break;
             }
         }
         guard target.count > 0 else {
-            throw ProjParserError.invalidFile
+            throw ProjParserError.invalidFile(pbxFilePath)
         }
         guard let buildPhases = target["buildPhases"] as? [String] else {
-            throw ProjParserError.invalidFile
+            throw ProjParserError.invalidFile(pbxFilePath)
         }
         var compileFiles: [String] = []
         for buildPhase_uuid in buildPhases {
             guard let aBuildPhase = pbxObjects[buildPhase_uuid] as? [String : Any] else {
-                throw ProjParserError.invalidFile
+                throw ProjParserError.invalidFile(pbxFilePath)
             }
             if let isa = aBuildPhase["isa"] as? String, isa == "PBXSourcesBuildPhase" {
                 guard let files = aBuildPhase["files"] as? [String] else {
-                    throw ProjParserError.invalidFile
+                    throw ProjParserError.invalidFile(pbxFilePath)
                 }
                 compileFiles = files.map({ file_uuid in
                     let fileDic: [String : Any] = pbxObjects[file_uuid] as? [String : Any] ?? [:]
@@ -100,7 +100,7 @@ class PbxParser {
             }
         }
         guard compileFiles.count > 0 else {
-            throw ProjParserError.invalidFile
+            throw ProjParserError.invalidFile(pbxFilePath)
         }
         
         var compileFilePaths: [String] = []
@@ -108,7 +108,7 @@ class PbxParser {
             if let filePath = allFiles[file] {
                 compileFilePaths.append(filePath)
             } else {
-                throw ProjParserError.invalidFile
+                throw ProjParserError.invalidFile(pbxFilePath)
             }
         }
         self.compileFiles = compileFilePaths
@@ -124,7 +124,7 @@ class PbxParser {
             if sourceTree == "<group>" {
                 aPath = filePath.appending("/\(path)")
             } else if sourceTree == "SOURCE_ROOT" {
-                aPath = projPath.appending("/\(path)")
+                aPath = pbxFilePath.appending("/\(path)")
             }
         }
         

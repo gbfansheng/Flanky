@@ -11,10 +11,13 @@ class LinkCacheAccessor {
     let cacheUrl: URL
     
     init(cacheUrl: URL) {
-        self.cacheUrl = cacheUrl
+        let env = ProcessInfo.processInfo.environment
+        let artifactFolderName = env["PLATFORM_NAME"] ?? ""
+        let projConfig = env["CONFIGURATION"] ?? ""
+        self.cacheUrl = cacheUrl.appendingPathComponent("\(projConfig)-\(artifactFolderName)")
     }
     
-    func findCache(_ cacheName: String) -> Bool {
+    func cacheExist(_ cacheName: String) -> Bool {
         let cache = cacheUrl.appendingPathComponent(cacheName)
         guard FileManager.default.fileExists(atPath: cache.path) else {
             return false

@@ -7,6 +7,7 @@
 
 import Foundation
 
+// TODO: refactor this
 class ProjectsResolver {
     
     private var projects: [Project] = []

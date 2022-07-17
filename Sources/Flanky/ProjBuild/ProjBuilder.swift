@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Zip
 
 enum ProjBuilderError: Error {
     case urlError
@@ -28,19 +29,31 @@ class ProjBuilder {
     
     func build(project: Project) throws {
 //        self.project = project
-        let cacheName = try project.cacheName()
-        //link cache
-        let isLinkCacheExists = linkCacheAccessor.findCache(cacheName)
-        guard !isLinkCacheExists else {
-            return
-        }
+        let cacheName = try project.zipCacheName()
+//        //link cache
+//        let isLinkCacheExists = linkCacheAccessor.findCache(cacheName)
+//        guard !isLinkCacheExists else {
+//            return
+//        }
         //local cache
-        let isLocalCacheExists = localCacheAccessor.findCache(cacheName)
-        if isLocalCacheExists {
-            try localCacheAccessor.moveCache(cacheName: cacheName, to: linkCacheAccessor.cacheUrl)
-        } else {
+        var isLocalCacheExists = localCacheAccessor.findCache(cacheName)
+        if !isLocalCacheExists {
             // Remote Cache
-            // xcodebuild 
+            let isRemoteCacheExists = remoteCacheAccessor.findCache(cacheName)
+            if isRemoteCacheExists {
+                try remoteCacheAccessor.moveCache(fromProject: project, toFolders: localCacheAccessor.cacheUrl)
+            } else {
+                // xcodebuild
+                let xcodebuild = XCodebuildWrapper(shell: shellGetStdout, buildDir: linkCacheAccessor.cacheUrl)
+                try xcodebuild.build(project: project)
+                return
+            }
+        }
+        isLocalCacheExists = localCacheAccessor.findCache(cacheName)
+        if isLocalCacheExists {
+            let zipCacheUrl = localCacheAccessor.cacheUrl.appendingPathComponent(cacheName)
+            let linkCacheUrl = linkCacheAccessor.cacheUrl.appendingPathComponent(project.artifactName())
+            try Zip.unzipFile(zipCacheUrl, destination: linkCacheUrl, overwrite: true, password: nil, progress: nil, fileOutputHandler: nil)
         }
     }
     

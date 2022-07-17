@@ -27,6 +27,31 @@ class Constructor {
         projectsResolver.resolveProjects(config: config)
         
         let buildSequence = projectsResolver.buildSequence()
+        // 计算env fingerprint
+        let env = ProcessInfo.processInfo.environment
+        let envFPAccumulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
+        let envFPGenerator = EnvironmentFingerprintGenerator.init(configuration: config, env: env, accumulator: envFPAccumulator)
+        let envFingerPrint = envFPGenerator.generateFingerprint()
+        // 计算 projects fingerprint
+        let projParser = PbxParser()
+        for projects in buildSequence {
+            for project in projects {
+                // env fingerprint
+                project.envFingerPrint = envFingerPrint
+                // files fingerprint
+                try projParser.parseProject(project)
+                let filesFPAccumulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
+                let filesFPGenerator = FilesFingerPrintGenerator.init(files: projParser.compileFiles, accumulator: filesFPAccumulator)
+                let filesFingerPrint = filesFPGenerator.generateFingerprint()
+                project.filesFingerPrint = filesFingerPrint
+                // fingerprint
+                let projectFingerPrintAccumulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
+                let projectFingerPrintGenerator = ProjectFingerPrintGenerator(fingerPrints: [envFingerPrint, filesFingerPrint], accumulator: projectFingerPrintAccumulator)
+                let projectFingerPrint = projectFingerPrintGenerator.generateFingerprint()
+                project.fingerPrint = projectFingerPrint
+            }
+        }
+        
         if mode == .serial {
             for projects in buildSequence {
                 for project in projects {

@@ -31,16 +31,19 @@ public class Project {
         self.name = name
         self.url = url
     }
-    
-    
 }
 
 
 extension Project {
-    func cacheName() throws -> String {
+    func zipCacheName() throws -> String {
         guard let fingerPrint = fingerPrint else {
             throw ProjectError.emptyFingerprint
         }
-        return name + "-" + fingerPrint + ".framework"
+        let zipCacheName = name + "_" + fingerPrint + ".framework.zip"
+        return zipCacheName
+    }
+    
+    func artifactName() -> String {
+        return name + ".framework"
     }
 }

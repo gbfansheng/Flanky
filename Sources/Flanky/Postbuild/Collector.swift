@@ -15,9 +15,6 @@ enum CollectorError: Error {
 }
 
 class Collector {
-//    let linkAddr: URL
-//    let localCacheAddr: URL
-//    let remoteCacheAddr: URL
     let config: Configuration
     let linkCacheAccessor: LinkCacheAccessor
     let localCacheAccessor: LocalCacheAccessor
@@ -82,7 +79,7 @@ class Collector {
             guard artifactExist else {
                 throw CollectorError.emptyArtifact(project.name)
             }
-            let artifactUrl = linkCacheAccessor.cacheUrl.appendingPathComponent(project.artifactName())
+            let artifactUrl = linkCacheAccessor.artifactFolderUrl.appendingPathComponent(project.artifactName())
             let zipCacheName = try project.zipCacheName()
             let zipCacheUrl = localCacheAccessor.cacheUrl.appendingPathComponent(zipCacheName)
             try Zip.zipFiles(paths: [artifactUrl], zipFilePath: zipCacheUrl, password: nil, compression: ZipCompression.BestCompression, progress: nil)

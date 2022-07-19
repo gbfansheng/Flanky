@@ -21,16 +21,16 @@
 class EnvironmentFingerprintGenerator {
     /// Default ENV variables constituting the environment fingerprint
     private static let defaultEnvFingerprintKeys = [
-        "GCC_PREPROCESSOR_DEFINITIONS",
-        "CLANG_COVERAGE_MAPPING",
-        "TARGET_NAME",
+//        "GCC_PREPROCESSOR_DEFINITIONS",x
+//        "CLANG_COVERAGE_MAPPING",x
+        "PROJECT_NAME",
         "CONFIGURATION",
         "PLATFORM_NAME",
         "XCODE_PRODUCT_BUILD_VERSION",
-        "CURRENT_PROJECT_VERSION",
-        "DYLIB_COMPATIBILITY_VERSION",
-        "DYLIB_CURRENT_VERSION",
-        "PRODUCT_MODULE_NAME",
+//        "CURRENT_PROJECT_VERSION",x
+//        "DYLIB_COMPATIBILITY_VERSION",x
+//        "DYLIB_CURRENT_VERSION",x
+        "PROJECT",
         "ARCHS",
     ]
     private let customFingerprintEnvs: [String]?

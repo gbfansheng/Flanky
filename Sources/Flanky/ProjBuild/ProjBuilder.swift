@@ -52,7 +52,10 @@ class ProjBuilder {
         isLocalCacheExists = localCacheAccessor.findCache(cacheName)
         if isLocalCacheExists {
             let zipCacheUrl = localCacheAccessor.cacheUrl.appendingPathComponent(cacheName)
-            let linkCacheUrl = linkCacheAccessor.cacheUrl.appendingPathComponent(project.artifactName())
+            let linkCacheUrl = linkCacheAccessor.artifactFolderUrl
+            if !FileManager.default.fileExists(atPath: linkCacheUrl.path) {
+                try FileManager.default.createDirectory(at: linkCacheUrl, withIntermediateDirectories: true)
+            }
             try Zip.unzipFile(zipCacheUrl, destination: linkCacheUrl, overwrite: true, password: nil, progress: nil, fileOutputHandler: nil)
         }
     }

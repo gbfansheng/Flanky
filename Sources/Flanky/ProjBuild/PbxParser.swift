@@ -21,6 +21,7 @@ class PbxParser {
     var allFiles: [String: String] = [:] // [uuid : filePath]
     var compileFiles : [String] = []
     var projectName: String = ""
+    var projectSourcePath: String = ""
     
     // read pb -> find compliesfile -> out put file path
     // resolve all file path : uuid : filepath
@@ -45,6 +46,7 @@ class PbxParser {
         guard let rootObject = objects[rootObject_uuid] as? [String : Any] else {
             throw ProjParserError.invalidFile(pbxFilePath)
         }
+        projectSourcePath = (project.url.deletingLastPathComponent()).path
         pbxRootObject = rootObject
         try parseGroup()
         try parsePhaseSources()
@@ -57,7 +59,7 @@ class PbxParser {
         guard let mainGroup = pbxObjects[mainGroup_uuid] as? [String : Any] else {
             throw ProjParserError.invalidFile(pbxFilePath)
         }
-        parseGroup(pbxGroup: mainGroup, filePath: pbxFilePath, uuid: mainGroup_uuid)
+        parseGroup(pbxGroup: mainGroup, filePath: projectSourcePath, uuid: mainGroup_uuid)
     }
     
     func parsePhaseSources() throws {
@@ -115,27 +117,27 @@ class PbxParser {
     }
     
     private func parseGroup(pbxGroup: [String : Any], filePath: String, uuid: String) {
-        var aPath = filePath
+        var accumulatePath = filePath
         let children = pbxGroup["children"] as? [String]
         let path = pbxGroup["path"] as? String
         let sourceTree = pbxGroup["sourceTree"] as? String
         
         if let path = path, path.count > 0 {
             if sourceTree == "<group>" {
-                aPath = filePath.appending("/\(path)")
+                accumulatePath = filePath.appending("/\(path)")
             } else if sourceTree == "SOURCE_ROOT" {
-                aPath = pbxFilePath.appending("/\(path)")
+                accumulatePath = projectSourcePath.appending("/\(path)")
             }
         }
         
         if let children = children, children.count > 0 {
             for child in children {
                 if let childDic = pbxObjects[child] as? [String : Any] {
-                    parseGroup(pbxGroup: childDic, filePath: filePath, uuid: child)
+                    parseGroup(pbxGroup: childDic, filePath: accumulatePath, uuid: child)
                 }
             }
         } else {
-            allFiles[uuid] = aPath
+            allFiles[uuid] = accumulatePath
         }
     }
 }

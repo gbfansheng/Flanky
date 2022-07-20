@@ -12,6 +12,7 @@ enum CollectorError: Error {
     case urlError
     case processError
     case emptyArtifact(String)
+    case fileError(String)
 }
 
 class Collector {
@@ -51,11 +52,19 @@ class Collector {
                 try projParser.parseProject(project)
                 let filesFPAccumulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
                 let filesFPGenerator = FilesFingerPrintGenerator.init(files: projParser.compileFiles, accumulator: filesFPAccumulator)
-                let filesFingerPrint = filesFPGenerator.generateFingerprint()
+                let filesFingerPrint = try filesFPGenerator.generateFingerprint()
                 project.filesFingerPrint = filesFingerPrint
+                // dependecies fingerprint
+                let dependenciesFingerPrints = project.dependencies?.map({ project in
+                    return project.fingerPrint ?? ""
+                }) ?? []
+                let dependenciesFPAccmulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
+                let dependenciesFPGenerator = ProjectFingerPrintGenerator.init(fingerPrints: dependenciesFingerPrints, accumulator: dependenciesFPAccmulator)
+                let dependenciesFingerPrint = dependenciesFPGenerator.generateFingerprint()
+                project.dependenciesFingerPrint = dependenciesFingerPrint
                 // fingerprint
                 let projectFingerPrintAccumulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
-                let projectFingerPrintGenerator = ProjectFingerPrintGenerator(fingerPrints: [envFingerPrint, filesFingerPrint], accumulator: projectFingerPrintAccumulator)
+                let projectFingerPrintGenerator = ProjectFingerPrintGenerator(fingerPrints: [envFingerPrint, filesFingerPrint, dependenciesFingerPrint], accumulator: projectFingerPrintAccumulator)
                 let projectFingerPrint = projectFingerPrintGenerator.generateFingerprint()
                 project.fingerPrint = projectFingerPrint
             }
@@ -76,13 +85,17 @@ class Collector {
         if !isLocalCacheExists {
             // save to local
             let artifactExist = linkCacheAccessor.cacheExist(project.artifactName())
+            let metaUrl = linkCacheAccessor.artifactFolderUrl.appendingPathComponent(project.metaName())
             guard artifactExist else {
+                throw CollectorError.emptyArtifact(project.name)
+            }
+            guard FileManager.default.fileExists(atPath: metaUrl.path) else {
                 throw CollectorError.emptyArtifact(project.name)
             }
             let artifactUrl = linkCacheAccessor.artifactFolderUrl.appendingPathComponent(project.artifactName())
             let zipCacheName = try project.zipCacheName()
             let zipCacheUrl = localCacheAccessor.cacheUrl.appendingPathComponent(zipCacheName)
-            try Zip.zipFiles(paths: [artifactUrl], zipFilePath: zipCacheUrl, password: nil, compression: ZipCompression.BestCompression, progress: nil)
+            try Zip.zipFiles(paths: [artifactUrl, metaUrl], zipFilePath: zipCacheUrl, password: nil, compression: ZipCompression.BestCompression, progress: nil)
             // upload to remote
             let isRemoteCacheExists = remoteCacheAccessor.findCache(zipCacheName)
             if (!isRemoteCacheExists) {
@@ -105,6 +118,4 @@ class Collector {
     func archive() {
         
     }
-    
-    
 }

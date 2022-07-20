@@ -46,4 +46,8 @@ extension Project {
     func artifactName() -> String {
         return name + ".framework"
     }
+    
+    func metaName() -> String {
+        return name + ".meta"
+    }
 }

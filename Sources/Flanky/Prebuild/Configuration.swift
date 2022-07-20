@@ -8,7 +8,7 @@
 import Foundation
 
 public struct Configuration {
-    public static let localCacheAddressKey = "localcache_address"
+//    public static let localCacheAddressKey = "localcache_address"
     public static let remoteCacheAddressKey = "remotecache_address"
     public static let linkAddressKey = "link_address"
     public static let projectsKey = "projects"

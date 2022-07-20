@@ -41,9 +41,9 @@ public class ConfigurationReader {
     }
     
     public func parseConfigDict(_ dict: [String: Any]) throws -> Configuration {
-        guard let localCacheAddress = dict[Configuration.localCacheAddressKey] as? String else {
-            throw ConfigrationReaderError.configError
-        }
+//        guard let localCacheAddress = dict[Configuration.localCacheAddressKey] as? String else {
+//            throw ConfigrationReaderError.configError
+//        }
         guard let remoteCacheAddress = dict[Configuration.remoteCacheAddressKey] as? String else {
             throw ConfigrationReaderError.configError
         }
@@ -57,7 +57,13 @@ public class ConfigurationReader {
             throw ConfigrationReaderError.configError
         }
         let customFingerprintEnvs = dict[Configuration.customFingerprintEnvsKey] as? [String]
-        return Configuration(localCacheAddress: localCacheAddress,
+        
+        let cacheURL: URL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let localCacheURL = cacheURL.appendingPathComponent("FlankyCache")
+        if !FileManager.default.fileExists(atPath: localCacheURL.path) {
+            try FileManager.default.createDirectory(at: localCacheURL, withIntermediateDirectories: true)
+        }
+        return Configuration(localCacheAddress: localCacheURL.path,
                              remoteCacheAddress: remoteCacheAddress,
                              linkAddress: linkAddress,
                              projects: projects,

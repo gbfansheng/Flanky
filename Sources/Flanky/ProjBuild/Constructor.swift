@@ -42,11 +42,19 @@ class Constructor {
                 try projParser.parseProject(project)
                 let filesFPAccumulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
                 let filesFPGenerator = FilesFingerPrintGenerator.init(files: projParser.compileFiles, accumulator: filesFPAccumulator)
-                let filesFingerPrint = filesFPGenerator.generateFingerprint()
+                let filesFingerPrint = try filesFPGenerator.generateFingerprint()
                 project.filesFingerPrint = filesFingerPrint
+                // dependecies fingerprint
+                let dependenciesFingerPrints = project.dependencies?.map({ project in
+                    return project.fingerPrint ?? ""
+                }) ?? []
+                let dependenciesFPAccmulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
+                let dependenciesFPGenerator = ProjectFingerPrintGenerator.init(fingerPrints: dependenciesFingerPrints, accumulator: dependenciesFPAccmulator)
+                let dependenciesFingerPrint = dependenciesFPGenerator.generateFingerprint()
+                project.dependenciesFingerPrint = dependenciesFingerPrint
                 // fingerprint
                 let projectFingerPrintAccumulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
-                let projectFingerPrintGenerator = ProjectFingerPrintGenerator(fingerPrints: [envFingerPrint, filesFingerPrint], accumulator: projectFingerPrintAccumulator)
+                let projectFingerPrintGenerator = ProjectFingerPrintGenerator(fingerPrints: [envFingerPrint, filesFingerPrint, dependenciesFingerPrint], accumulator: projectFingerPrintAccumulator)
                 let projectFingerPrint = projectFingerPrintGenerator.generateFingerprint()
                 project.fingerPrint = projectFingerPrint
             }

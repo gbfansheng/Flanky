@@ -42,7 +42,7 @@ public class ConfigurationReader {
     
     public func parseConfigDict(_ dict: [String: Any]) throws -> Configuration {
 //        guard let localCacheAddress = dict[Configuration.localCacheAddressKey] as? String else {
-//            throw ConfigrationReaderError.configError
+        //            throw ConfigrationReaderError.configError
 //        }
         guard let remoteCacheAddress = dict[Configuration.remoteCacheAddressKey] as? String else {
             throw ConfigrationReaderError.configError

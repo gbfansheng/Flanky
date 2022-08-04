@@ -28,10 +28,11 @@ class XCodebuildWrapper {
     func build(project: Project) throws {
         let env = ProcessInfo.processInfo.environment
         let scheme = project.name
+        let platform = env["PLATFORM_NAME"] ?? ""
         let arch = env["PLATFORM_PREFERRED_ARCH"] ?? ""
         let projectConfig = env["CONFIGURATION"] ?? ""
         let projectDir = project.url.deletingLastPathComponent().path
-        let args = ["-scheme", scheme, "SYMROOT=\(buildDir.path)", "-arch", arch, "-configuration", projectConfig]
+        let args = ["-scheme", scheme, "SYMROOT=\(buildDir.path)", "-arch", arch, "-sdk", platform, "-configuration", projectConfig]
         let task = Process()
         task.environment = env
         let cmd = try shellGetStdout("/usr/bin/which", args: ["xcodebuild"])

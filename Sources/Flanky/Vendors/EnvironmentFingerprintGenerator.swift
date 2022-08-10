@@ -26,7 +26,7 @@ class EnvironmentFingerprintGenerator {
         "PROJECT_NAME",
         "CONFIGURATION",
         "PLATFORM_NAME",
-        "XCODE_VERSION_MAJOR",
+        "XCODE_PRODUCT_BUILD_VERSION",
 //        "CURRENT_PROJECT_VERSION",x
 //        "DYLIB_COMPATIBILITY_VERSION",x
 //        "DYLIB_CURRENT_VERSION",x

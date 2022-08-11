@@ -92,16 +92,19 @@ class Collector {
             guard FileManager.default.fileExists(atPath: metaUrl.path) else {
                 throw CollectorError.emptyArtifact(project.name)
             }
-            let artifactUrl = linkCacheAccessor.artifactFolderUrl.appendingPathComponent(project.artifactName())
-            let zipCacheName = try project.zipCacheName()
-            let zipCacheUrl = localCacheAccessor.cacheUrl.appendingPathComponent(zipCacheName)
-            try Zip.zipFiles(paths: [artifactUrl, metaUrl], zipFilePath: zipCacheUrl, password: nil, compression: ZipCompression.BestCompression, progress: nil)
-            // upload to remote
-            let isRemoteCacheExists = remoteCacheAccessor.findCache(zipCacheName)
-            if (!isRemoteCacheExists) {
-                try remoteCacheAccessor.uploadCache(zipCacheUrl, for: project)
+            if let metaData = FileManager.default.contents(atPath: metaUrl.path),
+                let metaString = String(data: metaData, encoding: String.Encoding.utf8),
+                metaString == project.fingerPrint {//有meta，且与meta与当前fingerprint相同才上传
+                    let artifactUrl = linkCacheAccessor.artifactFolderUrl.appendingPathComponent(project.artifactName())
+                    let zipCacheName = try project.zipCacheName()
+                    let zipCacheUrl = localCacheAccessor.cacheUrl.appendingPathComponent(zipCacheName)
+                    try Zip.zipFiles(paths: [artifactUrl, metaUrl], zipFilePath: zipCacheUrl, password: nil, compression: ZipCompression.BestCompression, progress: nil)
+                    // upload to remote
+                    let isRemoteCacheExists = remoteCacheAccessor.findCache(zipCacheName)
+                    if (!isRemoteCacheExists) {
+                        try remoteCacheAccessor.uploadCache(zipCacheUrl, for: project)
+                    }
             }
-//            try localCacheAccessor.moveCache(fromProject: project, toFolder: linkCacheAccessor.cacheUrl)
         } else {
 //            // Remote Cache
 //            let isRemoteCacheExists = remoteCacheAccessor.findCache(cacheName)
@@ -113,9 +116,5 @@ class Collector {
 //                try xcodebuild.build(project: project)
 //            }
         }
-    }
-    
-    func archive() {
-        
     }
 }

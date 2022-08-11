@@ -19,16 +19,16 @@ class PbxParser {
     var pbxObjects: [String : Any] = [:]
     var pbxRootObject: [String : Any] = [:]
     var allFiles: [String: String] = [:] // [uuid : filePath]
-    var compileFiles : [String] = []
+    var sortedCompileFiles : [String] = []
     var projectName: String = ""
     var projectSourcePath: String = ""
+    let compileFileTypes = [".h", ".m", ".xib", ".nib", ".swift", ".plist", ".hpp", ".cpp", ".c"]
     
     // read pb -> find compliesfile -> out put file path
     // resolve all file path : uuid : filepath
     // sourcesphase -> uuid -> filepaths
     func parseProject(_ project: Project) throws {
-//        let path = "/Users/shenglinfan/Desktop/workspace/TestXCRemoteCache_Consumer/TestXCRemoteCache.xcodeproj/project.pbxproj"
-        pbxFilePath = project.url.appendingPathComponent("project.pbxproj").path //"/Users/shenglinfan/Desktop/workspace/TestXCRemoteCache_Consumer"
+        pbxFilePath = project.url.appendingPathComponent("project.pbxproj").path
         projectName = project.name // project.name
         guard FileManager.default.fileExists(atPath: pbxFilePath) else {
             throw ProjParserError.emptyFile(pbxFilePath)
@@ -49,7 +49,7 @@ class PbxParser {
         projectSourcePath = (project.url.deletingLastPathComponent()).path
         pbxRootObject = rootObject
         try parseGroup()
-        try parsePhaseSources()
+        filterCompileFiles()
     }
     
     func parseGroup() throws {
@@ -62,58 +62,16 @@ class PbxParser {
         parseGroup(pbxGroup: mainGroup, filePath: projectSourcePath, uuid: mainGroup_uuid)
     }
     
-    func parsePhaseSources() throws {
-        guard let targets = pbxRootObject["targets"] as? [String] else {
-            throw ProjParserError.invalidFile(pbxFilePath)
-        }
-        var target: [String : Any] = [:]
-        for target_uuid in targets {
-            guard let aTarget = pbxObjects[target_uuid] as? [String : Any] else {
-                throw ProjParserError.invalidFile(pbxFilePath)
-            }
-            guard let name = aTarget["name"] as? String else {
-                throw ProjParserError.invalidFile(pbxFilePath)
-            }
-            if name == projectName {
-                target = aTarget
-                break;
-            }
-        }
-        guard target.count > 0 else {
-            throw ProjParserError.invalidFile(pbxFilePath)
-        }
-        guard let buildPhases = target["buildPhases"] as? [String] else {
-            throw ProjParserError.invalidFile(pbxFilePath)
-        }
-        var compileFiles: [String] = []
-        for buildPhase_uuid in buildPhases {
-            guard let aBuildPhase = pbxObjects[buildPhase_uuid] as? [String : Any] else {
-                throw ProjParserError.invalidFile(pbxFilePath)
-            }
-            if let isa = aBuildPhase["isa"] as? String, isa == "PBXSourcesBuildPhase" {
-                guard let files = aBuildPhase["files"] as? [String] else {
-                    throw ProjParserError.invalidFile(pbxFilePath)
+    func filterCompileFiles() {
+        let allFiles = self.allFiles.map{$1}
+        self.sortedCompileFiles = allFiles.filter { path in
+            for fileType in compileFileTypes {
+                if path.contains(fileType) {
+                    return true
                 }
-                compileFiles = files.map({ file_uuid in
-                    let fileDic: [String : Any] = pbxObjects[file_uuid] as? [String : Any] ?? [:]
-                    let fileRef = fileDic["fileRef"] as? String ?? ""
-                    return fileRef
-                })
             }
-        }
-        guard compileFiles.count > 0 else {
-            throw ProjParserError.invalidFile(pbxFilePath)
-        }
-        
-        var compileFilePaths: [String] = []
-        for file in compileFiles {
-            if let filePath = allFiles[file] {
-                compileFilePaths.append(filePath)
-            } else {
-                throw ProjParserError.invalidFile(pbxFilePath)
-            }
-        }
-        self.compileFiles = compileFilePaths
+            return false
+        }.sorted()
     }
     
     private func parseGroup(pbxGroup: [String : Any], filePath: String, uuid: String) {

@@ -51,7 +51,7 @@ class Collector {
                 // files fingerprint
                 try projParser.parseProject(project)
                 let filesFPAccumulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
-                let filesFPGenerator = FilesFingerPrintGenerator.init(files: projParser.compileFiles, accumulator: filesFPAccumulator)
+                let filesFPGenerator = FilesFingerPrintGenerator.init(files: projParser.sortedCompileFiles, accumulator: filesFPAccumulator)
                 let filesFingerPrint = try filesFPGenerator.generateFingerprint()
                 project.filesFingerPrint = filesFingerPrint
                 // dependecies fingerprint

@@ -43,9 +43,9 @@ class Collector {
         let envFPGenerator = EnvironmentFingerprintGenerator.init(configuration: config, env: env, accumulator: envFPAccumulator)
         let envFingerPrint = envFPGenerator.generateFingerprint()
         // 计算 projects fingerprint
-        let projParser = PbxParser()
         for projects in buildSequence {
             for project in projects {
+                let projParser = PbxParser()
                 // env fingerprint
                 project.envFingerPrint = envFingerPrint
                 // files fingerprint

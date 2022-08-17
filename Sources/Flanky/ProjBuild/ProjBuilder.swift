@@ -44,11 +44,11 @@ class ProjBuilder {
                 try remoteCacheAccessor.moveCache(fromProject: project, toFolders: localCacheAccessor.cacheUrl)
             } else {
                 // xcodebuild
-                let artifactUrl = linkCacheAccessor.artifactFolderUrl.appendingPathComponent(project.artifactName())
+//                let artifactUrl = linkCacheAccessor.artifactFolderUrl.appendingPathComponent(project.artifactName())
                 let metaUrl = linkCacheAccessor.artifactFolderUrl.appendingPathComponent(project.metaName())
-                if FileManager.default.fileExists(atPath: artifactUrl.path) {
-                    try FileManager.default.removeItem(at: artifactUrl)
-                }
+//                if FileManager.default.fileExists(atPath: artifactUrl.path) {
+//                    try FileManager.default.removeItem(at: artifactUrl)
+//                }
                 if FileManager.default.fileExists(atPath: metaUrl.path) {
                     try FileManager.default.removeItem(at: metaUrl)
                 }

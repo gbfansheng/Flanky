@@ -33,15 +33,15 @@ class Constructor {
         let envFPGenerator = EnvironmentFingerprintGenerator.init(configuration: config, env: env, accumulator: envFPAccumulator)
         let envFingerPrint = envFPGenerator.generateFingerprint()
         // 计算 projects fingerprint
-        let projParser = PbxParser()
         for projects in buildSequence {
             for project in projects {
+                let projParser = PbxParser()
                 // env fingerprint
                 project.envFingerPrint = envFingerPrint
                 // files fingerprint
                 try projParser.parseProject(project)
                 let filesFPAccumulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
-                let filesFPGenerator = FilesFingerPrintGenerator.init(files: projParser.compileFiles, accumulator: filesFPAccumulator)
+                let filesFPGenerator = FilesFingerPrintGenerator.init(files: projParser.sortedCompileFiles, accumulator: filesFPAccumulator)
                 let filesFingerPrint = try filesFPGenerator.generateFingerprint()
                 project.filesFingerPrint = filesFingerPrint
                 // dependecies fingerprint
@@ -73,5 +73,14 @@ class Constructor {
         
     }
     
-    
+//    func testFiles(files: [String]) throws  {
+//        var ret : [String] = []
+//        for file in files {
+//            let filesFPAccumulator = FingerprintAccumulator(algorithm: MD5Algorithm(), fileManager: FileManager.default)
+//            let filesFPGenerator = FilesFingerPrintGenerator.init(files: [file], accumulator: filesFPAccumulator)
+//            let filesFingerPrint = try filesFPGenerator.generateFingerprint()
+//            ret.append(filesFingerPrint)
+//        }
+//
+//    }
 }

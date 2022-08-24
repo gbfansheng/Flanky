@@ -32,8 +32,12 @@ struct Flanky: ParsableCommand {
     // Postbuild命令
     struct Postbuild: ParsableCommand {
         static var configuration = CommandConfiguration(abstract: "Use to execute Postbuild process")
+        
+        @Option(help: "config file location")
+        var input: String
+        
         func run() throws {
-            FkPostbuild().main()
+            FkPostbuild(input: input).main()
         }
         
     }

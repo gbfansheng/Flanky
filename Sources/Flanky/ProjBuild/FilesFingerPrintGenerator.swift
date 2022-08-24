@@ -9,16 +9,18 @@ import Foundation
 
 class FilesFingerPrintGenerator {
     
-    let files: [String]
+    let files: [URL]
     let accumulator: FingerprintAccumulator
     
     init(files: [String], accumulator: FingerprintAccumulator) {
-        self.files = files
+        self.files = files.map({ file in
+            return URL.init(fileURLWithPath: file)
+        })
         self.accumulator = accumulator
     }
     
-    func generateFingerprint() -> String {
-        files.forEach(accumulator.append)
+    func generateFingerprint() throws -> String {
+        try files.forEach(accumulator.append)
         return accumulator.generate()
     }
 }

@@ -1,0 +1,2 @@
+docker build -t flanky-backend Backend-example
+docker run -it --rm -d -p 8080:8080 --name flanky flanky-backend

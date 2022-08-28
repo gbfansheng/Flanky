@@ -1,5 +1,5 @@
 # Flanky
-A XCode remote cache tool for monorepo.
+A XCode remote cache command line tool for iOS
 
 Flanky是一款单仓多组件远程缓存工具，采用command line tool方式实现
 

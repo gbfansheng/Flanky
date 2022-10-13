@@ -15,15 +15,10 @@ public class FkPostbuild {
         self.configPath = input
     }
     // build finish -> caculate fingerprint -> fileexist in server/local? -> zip archive -> upload
-    public func main() {
+    public func main() throws {
         let configReader = ConfigurationReader(fileUrl: URL.init(fileURLWithPath: configPath))
-        do {
-            let configuration = try configReader.readConfig()
-            let collector = try Collector(config: configuration)
-            try collector.collect()
-        } catch {
-            print(error.localizedDescription)
-            print(error)
-        }
+        let configuration = try configReader.readConfig()
+        let collector = try Collector(config: configuration)
+        try collector.collect()
     }
 }

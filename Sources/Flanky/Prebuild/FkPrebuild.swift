@@ -16,15 +16,10 @@ public class FkPrebuild {
         self.configPath = input
     }
     
-    public func main() { 
+    public func main() throws {
         let configReader = ConfigurationReader(fileUrl: URL.init(fileURLWithPath: configPath))
-        do {
-            let configuration = try configReader.readConfig()
-            let constructor = Constructor.init(config: configuration)
-            try constructor.construct(mode: ConstructMode.serial) // TODO: mode command
-        } catch {
-            print(error.localizedDescription)
-            print(error)
-        }
+        let configuration = try configReader.readConfig()
+        let constructor = Constructor.init(config: configuration)
+        try constructor.construct(mode: ConstructMode.serial) // TODO: mode command
     }
 }

@@ -25,7 +25,7 @@ struct Flanky: ParsableCommand {
         var input: String
         
         func run() throws {
-            FkPrebuild(input: input).main()
+            try FkPrebuild(input: input).main()
         }
     }
     
@@ -37,7 +37,7 @@ struct Flanky: ParsableCommand {
         var input: String
         
         func run() throws {
-            FkPostbuild(input: input).main()
+            try FkPostbuild(input: input).main()
         }
         
     }
